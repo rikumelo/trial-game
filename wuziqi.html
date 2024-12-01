@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子棋游戏</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        
+        canvas {
+            background-color: #DEB887;
+            border: 1px solid #000;
+        }
+        
+        .info {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .stone {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .black {
+            background-color: #000;
+        }
+        
+        .white {
+            background-color: #fff;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <canvas id="board" width="600" height="600"></canvas>
+        <div class="info">
+            <div>当前玩家: <span id="currentPlayer" class="stone black"></span></div>
+            <div>黑子胜利: <span id="blackWins">0</span></div>
+            <div>白子胜利: <span id="whiteWins">0</span></div>
+        </div>
+    </div>
+    <script>
+        class GomokuGame {
+            constructor() {
+                this.canvas = document.getElementById('board');
+                this.ctx = this.canvas.getContext('2d');
+                this.BOARD_SIZE = 15;
+                this.CELL_SIZE = this.canvas.width / this.BOARD_SIZE;
+                this.board = Array(this.BOARD_SIZE).fill().map(() => Array(this.BOARD_SIZE).fill(0));
+                this.blackTurn = true;
+                this.blackWins = 0;
+                this.whiteWins = 0;
+                this.lastMove = null;
+                this.winningPoints = null;
+
+                this.canvas.addEventListener('click', this.handleClick.bind(this));
+                this.drawBoard();
+            }
+
+            drawBoard() {
+                // 绘制棋盘背景
+                this.ctx.fillStyle = '#DEB887';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // 绘制网格线
+                this.ctx.beginPath();
+                this.ctx.strokeStyle = '#000';
+                for (let i = 0; i < this.BOARD_SIZE; i++) {
+                    // 横线
+                    this.ctx.moveTo(this.CELL_SIZE / 2, i * this.CELL_SIZE + this.CELL_SIZE / 2);
+                    this.ctx.lineTo(this.canvas.width - this.CELL_SIZE / 2, i * this.CELL_SIZE + this.CELL_SIZE / 2);
+                    // 竖线
+                    this.ctx.moveTo(i * this.CELL_SIZE + this.CELL_SIZE / 2, this.CELL_SIZE / 2);
+                    this.ctx.lineTo(i * this.CELL_SIZE + this.CELL_SIZE / 2, this.canvas.height - this.CELL_SIZE / 2);
+                }
+                this.ctx.stroke();
+
+                // 绘制棋子
+                for (let x = 0; x < this.BOARD_SIZE; x++) {
+                    for (let y = 0; y < this.BOARD_SIZE; y++) {
+                        if (this.board[x][y] !== 0) {
+                            this.drawStone(x, y, this.board[x][y] === 1);
+                        }
+                    }
+                }
+
+                // 绘制最后落子标记
+                if (this.lastMove) {
+                    this.drawLastMoveMarker(this.lastMove.x, this.lastMove.y);
+                }
+
+                // 绘制获胜标记
+                if (this.winningPoints) {
+                    this.drawWinningMarkers();
+                }
+            }
+
+            drawStone(x, y, isBlack) {
+                this.ctx.beginPath();
+                this.ctx.arc(
+                    x * this.CELL_SIZE + this.CELL_SIZE / 2,
+                    y * this.CELL_SIZE + this.CELL_SIZE / 2,
+                    this.CELL_SIZE * 0.4,
+                    0,
+                    Math.PI * 2
+                );
+
+                if (isBlack) {
+                    this.ctx.fillStyle = '#000';
+                    this.ctx.fill();
+                } else {
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#000';
+                    this.ctx.stroke();
+                }
+            }
